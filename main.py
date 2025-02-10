@@ -78,6 +78,39 @@ def djikstra(start, end):
         pygame.display.update()
     return False
 
+def heurs(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+def astar(start, end):
+    queue = PriorityQueue()
+    cameFrom = {}
+    g_n = {position: float('inf') for row in range(ROWS) for position in [(row, col) for col in range(ROWS)]}
+    g_n[start] = 0
+    f_n = {position: float('inf') for row in range(ROWS) for position in [(row, col) for col in range(ROWS)]}
+    f_n[start] = heurs(start, end)
+    queue.put((f_n[start], start))
+
+    while not queue.empty():
+        _, cur = queue.get()
+
+        if cur == end:
+            finalPath(cameFrom, end)
+            return True
+        
+        for neighbour in neighbours(cur):
+            tempG = g_n[cur] + 1
+            if tempG < g_n[neighbour]:
+                cameFrom[neighbour] = cur
+                g_n[neighbour] = tempG
+                f_n[neighbour] = tempG + heurs(neighbour, end)
+                queue.put((f_n[neighbour], neighbour))
+
+                if gridData[neighbour[0]][neighbour[1]] not in [YELLOW, RED]:
+                    gridData[neighbour[0]][neighbour[1]] = BLUE
+        grid()
+        pygame.display.update()
+    return False
+
 def finalPath(cameFrom, cur):
     while cur in cameFrom:
         cur = cameFrom[cur]
@@ -86,7 +119,11 @@ def finalPath(cameFrom, cur):
         grid()
         pygame.display.update()
     
-
+def clearAlg():
+    for row in range(ROWS):
+        for col in range(ROWS):
+            if gridData[row][col] in [BLUE, GREEN]:
+                gridData[row][col] = WHITE
 def main():
     global start, end
     game = True
@@ -122,9 +159,15 @@ def main():
                     end = None
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and start and end:
+                if event.key == pygame.K_1 and start and end:
+                    clearAlg()
                     djikstra(start, end)
-        
+                if event.key == pygame.K_2 and start and end:
+                    clearAlg()
+                    astar(start, end)
+                if event.key == pygame.K_0 and start and end:
+                    clearAlg()
+                    
         pygame.display.update()
     
     pygame.quit()
